@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+    <title>Chat</title>
+    <link rel="stylesheet" href="/static/main.css"/>
+</head>
+<body>
+    <div id="form-wrapper" class="entry">
+        <div class="login">
+            <form id="login-form">
+                <label for="login-user">Name</label>
+                <input id="login-user" name="username" autocomplete="off"/>
+                <button data-action="submit" name="submit-name">Submit</button>
+
+                - or -
+
+                <button data-action="spectating" name="spectating">Just watching</button>
+            </form>
+        </div>
+    </div>
+
+    <ul id="messages"></ul>
+
+    <form id="chat-form" action="">
+        <input id="m" autocomplete="off" />
+        <button>Send</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/static/main.js"></script>
+</body>
+</html>
