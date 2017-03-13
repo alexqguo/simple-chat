@@ -19,6 +19,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('ready', (data) => {
+        // Todo: sanitize!
         users[username].message = data.message;
         console.log(data);
         console.log(users);

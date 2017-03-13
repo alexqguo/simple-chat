@@ -25,6 +25,7 @@
         this.id = id;
         this.name = name;
         this.form = document.getElementById(id);
+        this.otherInput = this.form.querySelector('.form-other');
         this.messages = document.getElementById(messages);
         this.init();
     }
@@ -39,30 +40,41 @@
         });
 
         this.form.addEventListener('submit', this.handleFormSubmit.bind(this));
+        this.otherInput.addEventListener('input', this.handleInputChange.bind(this));
     }
 
     Chat.prototype.handleFormSubmit = function(e) {
         e.preventDefault();
 
-        socket.emit(Messages.USER_READY, { message: this.getUserInput() });
+        socket.emit(Messages.USER_READY, { message: this.serialize() });
+    }
+
+    Chat.prototype.handleInputChange = function(e) {
+        if (e.target.value) {
+            this.form.querySelector('.form-other-radio').checked = true;
+        }
     }
 
     Chat.prototype.updateUsers = function(data) {
         console.log(data);
     }
 
-    Chat.prototype.getUserInput = function() {
-        try {
-            return this.form.querySelectorAll('input')[0].value;
-        } catch (e) {
-            log.error(e);
+    Chat.prototype.serialize = function() {
+        var selected = this.form.querySelector('input[type="radio"]:checked');
+
+        if (!selected) return null;
+
+        var value = selected.value;
+
+        if (isNaN(parseInt(value))) {
+            value = this.otherInput.value;
         }
 
-        return '';
+        return value;
     }
 
     Chat.prototype.clearInput = function() {
-        this.form.querySelectorAll('input')[0].value = '';
+        this.otherInput.value = '';
     }
 
     Chat.prototype.updateChatWithMessages = function(users) {

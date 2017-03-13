@@ -22,7 +22,35 @@
     <ul id="chat-messages"></ul>
 
     <form id="chat-form">
-        <input id="m" autocomplete="off" />
+        <label>
+            <input type="radio" name="points" value="1">
+            <span class="point-label">1</span>
+        </label>
+        <label>
+            <input type="radio" name="points" value="2">
+            <span class="point-label">2</span>
+        </label>
+        <label>
+            <input type="radio" name="points" value="3">
+            <span class="point-label">3</span>
+        </label>
+        <label>
+            <input type="radio" name="points" value="5">
+            <span class="point-label">5</span>
+        </label>
+        <label>
+            <input type="radio" name="points" value="8">
+            <span class="point-label">8</span>
+        </label>
+        <label>
+            <input type="radio" name="points" value="13">
+            <span class="point-label">13</span>
+        </label>
+        <label>
+            <input type="radio" name="points" value="Other" class="form-other-radio">
+            <span class="point-label">Other</span>
+        </label>
+        <input type="text" autocomplete="off" class="form-other"/>
         <button>Send</button>
     </form>
 
