@@ -15,11 +15,13 @@ io.on('connection', (socket) => {
 
         cb(true);
         printUsers(io.engine.clientsCount);
-        io.emit('users_update', users);
+        io.sockets.emit('users_update', users);
     });
 
     socket.on('ready', (data) => {
         users[username].message = data.message;
+        console.log(data);
+        console.log(users);
 
         checkAllUsersForReady();
     });
@@ -29,7 +31,7 @@ io.on('connection', (socket) => {
         delete users[username];
 
         printUsers(io.engine.clientsCount);
-        io.emit('users_update', users);
+        io.sockets.emit('users_update', users);
     });
 });
 
@@ -45,8 +47,9 @@ function checkAllUsersForReady() {
 
 function releaseUsers() {
     // Should really just be messages and not complete user data but oh well, currently that's all there is
-    io.emit('release', users);
+    io.sockets.emit('release', users);
 
+    // Clear messages for everyone
     for (var key in users) {
         users[key].message = null;
     }

@@ -41,7 +41,9 @@
         this.form.addEventListener('submit', this.handleFormSubmit.bind(this));
     }
 
-    Chat.prototype.handleFormSubmit = function() {
+    Chat.prototype.handleFormSubmit = function(e) {
+        e.preventDefault();
+
         socket.emit(Messages.USER_READY, { message: this.getUserInput() });
     }
 
@@ -50,7 +52,13 @@
     }
 
     Chat.prototype.getUserInput = function() {
-        return this.form.querySelectorAll('input')[0].value;
+        try {
+            return this.form.querySelectorAll('input')[0].value;
+        } catch (e) {
+            log.error(e);
+        }
+
+        return '';
     }
 
     Chat.prototype.clearInput = function() {
@@ -81,11 +89,12 @@
 
     LoginForm.prototype.init = function() {
         var _this = this;
+        var buttons = this.form.querySelectorAll('button');
 
         this.form.addEventListener('submit', this.handleSubmit.bind(_this));
-        this.form.querySelectorAll('button').forEach(function(button) {
-            button.addEventListener('click', _this.handleSubmitClick.bind(_this));
-        });
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].addEventListener('click', this.handleSubmitClick.bind(this));
+        }
     }
 
     LoginForm.prototype.serialize = function() {
