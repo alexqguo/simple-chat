@@ -4,14 +4,15 @@
     var Elements = {
         LOGIN_FORM: 'login-form',
         FORM_WRAPPER: 'form-wrapper',
-        CHAT_FORM: 'chat-form'
+        CHAT_FORM: 'chat-form',
+        CHAT_MESSAGES: 'chat-messages'
     };
     var Messages = {
         USER_LOGIN: 'login',
         USER_READY: 'ready',
         USER_MESSAGE: 'message',
         RELEASE_MESSAGE: 'release',
-        NEW_USER: 'new_user'
+        USERS_UPDATE: 'users_update'
     };
 
     function initSession() {
@@ -20,23 +21,53 @@
 
     socket.on('connect', initSession);
 
-    function Chat(name, id) {
+    function Chat(name, id, messages) {
         this.id = id;
         this.name = name;
         this.form = document.getElementById(id);
+        this.messages = document.getElementById(messages);
         this.init();
     }
 
     Chat.prototype.init = function() {
+        socket.on(Messages.USERS_UPDATE, this.updateUsers.bind(this));
+        socket.on(Messages.RELEASE_MESSAGE, this.updateChatWithMessages.bind(this));
         socket.emit(Messages.USER_LOGIN, { name: this.name }, function(data) {
-            console.log(data);
+            if (!data) {
+                document.location.reload(); // literally cannot happen
+            }
         });
 
-        socket.on(Messages.NEW_USER, this.acceptNewUser);
+        this.form.addEventListener('submit', this.handleFormSubmit.bind(this));
     }
 
-    Chat.prototype.acceptNewUser = function(data) {
-        console.log('new user ' + data.username);
+    Chat.prototype.handleFormSubmit = function() {
+        socket.emit(Messages.USER_READY, { message: this.getUserInput() });
+    }
+
+    Chat.prototype.updateUsers = function(data) {
+        console.log(data);
+    }
+
+    Chat.prototype.getUserInput = function() {
+        return this.form.querySelectorAll('input')[0].value;
+    }
+
+    Chat.prototype.clearInput = function() {
+        this.form.querySelectorAll('input')[0].value = '';
+    }
+
+    Chat.prototype.updateChatWithMessages = function(users) {
+        var fragment = document.createDocumentFragment();
+
+        for (var key in users) {
+            var message = document.createElement('li');
+            message.innerHTML = users[key].username + ': ' + users[key].message
+            fragment.appendChild(message);
+        }
+
+        this.messages.appendChild(fragment);
+        this.clearInput();
     }
 
     function LoginForm(id, wrapper) {
@@ -73,7 +104,8 @@
         var formData = this.serialize();
 
         if (this.submitAction === 'submit' && !!formData.username) {
-            chat = new Chat(formData.username, Elements.CHAT_FORM);
+            chat = new Chat(formData.username, Elements.CHAT_FORM, Elements.CHAT_MESSAGES);
+            window.c = chat;
         }
 
         this.close();

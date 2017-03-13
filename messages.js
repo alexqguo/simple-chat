@@ -5,21 +5,23 @@ let users = {};
 
 io.on('connection', (socket) => {
     var username;
-    // socket.on('chat message', (msg) => {
-    //     socket.broadcast.emit('');
-    //     io.emit('chat message', msg);
-    // });
-    //
-    // socket.on('disconnect', () => {
-    //     console.log('someone disconnected');
-    // });
+
     socket.on('login', (data, cb) => {
         username = data.name;
-        users[username] = username;
+        users[username] = {
+            username: username,
+            message: null
+        };
 
         cb(true);
         printUsers(io.engine.clientsCount);
-        io.emit('new_user', users);
+        io.emit('users_update', users);
+    });
+
+    socket.on('ready', (data) => {
+        users[username].message = data.message;
+
+        checkAllUsersForReady();
     });
 
     socket.on('disconnect', () => {
@@ -27,9 +29,28 @@ io.on('connection', (socket) => {
         delete users[username];
 
         printUsers(io.engine.clientsCount);
-        // need to determine which user to drop
+        io.emit('users_update', users);
     });
 });
+
+function checkAllUsersForReady() {
+    for (var key in users) {
+        if (!users[key].message) {
+            return;
+        }
+    }
+
+    releaseUsers();
+}
+
+function releaseUsers() {
+    // Should really just be messages and not complete user data but oh well, currently that's all there is
+    io.emit('release', users);
+
+    for (var key in users) {
+        users[key].message = null;
+    }
+}
 
 function printUsers(clientCount) {
     console.log(users);
