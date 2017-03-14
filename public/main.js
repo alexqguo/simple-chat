@@ -5,7 +5,8 @@
         LOGIN_FORM: 'login-form',
         FORM_WRAPPER: 'form-wrapper',
         CHAT_FORM: 'chat-form',
-        CHAT_MESSAGES: 'chat-messages'
+        CHAT_MESSAGES: 'chat-messages',
+        ACTIVE_USERS: 'active-users'
     };
     var Messages = {
         USER_LOGIN: 'login',
@@ -31,7 +32,6 @@
     }
 
     Chat.prototype.init = function() {
-        socket.on(Messages.USERS_UPDATE, this.updateUsers.bind(this));
         socket.on(Messages.RELEASE_MESSAGE, this.updateChatWithMessages.bind(this));
         socket.emit(Messages.USER_LOGIN, { name: this.name }, function(data) {
             if (!data) {
@@ -39,6 +39,7 @@
             }
         });
 
+        this.form.classList.add('active');
         this.form.addEventListener('submit', this.handleFormSubmit.bind(this));
         this.otherInput.addEventListener('input', this.handleInputChange.bind(this));
     }
@@ -53,10 +54,6 @@
         if (e.target.value) {
             this.form.querySelector('.form-other-radio').checked = true;
         }
-    }
-
-    Chat.prototype.updateUsers = function(data) {
-        console.log(data);
     }
 
     Chat.prototype.serialize = function() {
@@ -74,6 +71,7 @@
     }
 
     Chat.prototype.clearInput = function() {
+        // TODO: should also clear radios
         this.otherInput.value = '';
     }
 
@@ -125,7 +123,15 @@
         var formData = this.serialize();
 
         if (this.submitAction === 'submit' && !!formData.username) {
-            chat = new Chat(formData.username, Elements.CHAT_FORM, Elements.CHAT_MESSAGES);
+            chat = new Chat(
+                formData.username,
+                Elements.CHAT_FORM,
+                Elements.CHAT_MESSAGES
+            );
+
+            new ActiveUsers(Elements.ACTIVE_USERS);
+
+            // TODO: remove
             window.c = chat;
         }
 
@@ -139,6 +145,23 @@
     LoginForm.prototype.close = function() {
         this.wrapper.style.display = 'none';
         this.form.removeEventListener('submit', this.handleSubmit);
+    }
+
+    function ActiveUsers(id) {
+        this.id = id;
+        this.box = document.getElementById(id);
+        this.init();
+    }
+
+    ActiveUsers.prototype.init = function() {
+        socket.on(Messages.USERS_UPDATE, this.updateUsers.bind(this));
+    }
+
+    ActiveUsers.prototype.updateUsers = function(data) {
+        if (!data) return;
+
+        this.box.style.display = 'block';
+        this.box.querySelector('.users-list').innerHTML = Object.keys(data).join(',');
     }
 
     /*
