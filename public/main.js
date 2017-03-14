@@ -204,5 +204,7 @@
             - NEW_USER (send)
 
         message inheritance
+
+        update everything if a user leaves. otherwise you'll get stuck
     */
 }());
