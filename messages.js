@@ -1,13 +1,16 @@
 'use strict';
 
 let io = require('./index');
+let xss = require('xss');
 let users = {};
 
 io.on('connection', (socket) => {
     var username;
 
     socket.on('login', (data, cb) => {
-        username = data.name;
+        username = xss(data.name);
+        // TODO: check for existing user
+
         users[username] = {
             username: username,
             message: null
@@ -20,7 +23,7 @@ io.on('connection', (socket) => {
 
     socket.on('ready', (data) => {
         // Todo: sanitize!
-        users[username].message = data.message;
+        users[username].message = xss(data.message);
         console.log(data);
         console.log(users);
 

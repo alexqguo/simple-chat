@@ -26,6 +26,7 @@
         this.id = id;
         this.name = name;
         this.form = document.getElementById(id);
+        this.overlay = this.form.querySelector('.overlay');
         this.otherInput = this.form.querySelector('.form-other');
         this.messages = document.getElementById(messages);
         this.init();
@@ -33,20 +34,24 @@
 
     Chat.prototype.init = function() {
         socket.on(Messages.RELEASE_MESSAGE, this.updateChatWithMessages.bind(this));
-        socket.emit(Messages.USER_LOGIN, { name: this.name }, function(data) {
-            if (!data) {
-                document.location.reload(); // literally cannot happen
-            }
-        });
 
-        this.form.classList.add('active');
-        this.form.addEventListener('submit', this.handleFormSubmit.bind(this));
-        this.otherInput.addEventListener('input', this.handleInputChange.bind(this));
+        if (this.name) {
+            socket.emit(Messages.USER_LOGIN, { name: this.name }, function(data) {
+                if (!data) {
+                    document.location.reload(); // literally cannot happen... YET
+                }
+            });
+
+            this.form.classList.add('active');
+            this.form.addEventListener('submit', this.handleFormSubmit.bind(this));
+            this.otherInput.addEventListener('input', this.handleInputChange.bind(this));
+        }
     }
 
     Chat.prototype.handleFormSubmit = function(e) {
         e.preventDefault();
 
+        this.overlay.style.display = 'block';
         socket.emit(Messages.USER_READY, { message: this.serialize() });
     }
 
@@ -71,8 +76,13 @@
     }
 
     Chat.prototype.clearInput = function() {
-        // TODO: should also clear radios
         this.otherInput.value = '';
+
+        var radios = this.form.querySelectorAll('input[type="radio"]');
+
+        for (var i = 0; i < radios.length; i++) {
+            radios[i].checked = false;
+        }
     }
 
     Chat.prototype.updateChatWithMessages = function(users) {
@@ -84,6 +94,7 @@
             fragment.appendChild(message);
         }
 
+        this.overlay.style.display = 'none';
         this.messages.appendChild(fragment);
         this.clearInput();
     }
@@ -92,7 +103,7 @@
         this.id = id;
         this.form = document.getElementById(id);
         this.wrapper = document.getElementById(wrapper);
-        this.submitAction = null;
+        this.submitAction = null; // this isn't currently needed
 
         this.init();
     }
@@ -121,20 +132,22 @@
     LoginForm.prototype.handleSubmit = function(e) {
         e.preventDefault();
         var formData = this.serialize();
+        var username = !!formData ? formData.username : '';
 
-        if (this.submitAction === 'submit' && !!formData.username) {
-            chat = new Chat(
-                formData.username,
-                Elements.CHAT_FORM,
-                Elements.CHAT_MESSAGES
-            );
+        /*
+        Used to check this.submitAction before creating a chat,
+        but realized we want a new chat either way
+        */
+        chat = new Chat(
+            username,
+            Elements.CHAT_FORM,
+            Elements.CHAT_MESSAGES
+        );
 
-            new ActiveUsers(Elements.ACTIVE_USERS);
+        // TODO: remove
+        window.c = chat;
 
-            // TODO: remove
-            window.c = chat;
-        }
-
+        new ActiveUsers(Elements.ACTIVE_USERS);
         this.close();
     }
 
@@ -150,18 +163,23 @@
     function ActiveUsers(id) {
         this.id = id;
         this.box = document.getElementById(id);
+        this.users = [];
         this.init();
     }
 
     ActiveUsers.prototype.init = function() {
         socket.on(Messages.USERS_UPDATE, this.updateUsers.bind(this));
+        this.box.style.display = 'block';
+
+        this.updateUsers();
     }
 
     ActiveUsers.prototype.updateUsers = function(data) {
-        if (!data) return;
+        if (data) this.users = Object.keys(data);
 
-        this.box.style.display = 'block';
-        this.box.querySelector('.users-list').innerHTML = Object.keys(data).join(',');
+        var content = this.users.length > 0 ? this.users.join(', ') : 'none';
+
+        this.box.querySelector('.users-list').innerHTML = content;
     }
 
     /*
