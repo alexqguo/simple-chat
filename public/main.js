@@ -13,7 +13,8 @@
         USER_READY: 'ready',
         USER_MESSAGE: 'message',
         RELEASE_MESSAGE: 'release',
-        USERS_UPDATE: 'users_update'
+        ALL_USERS: 'users_update',
+        GET_USERS: 'get_users'
     };
 
     function initSession() {
@@ -168,10 +169,14 @@
     }
 
     ActiveUsers.prototype.init = function() {
-        socket.on(Messages.USERS_UPDATE, this.updateUsers.bind(this));
+        socket.on(Messages.ALL_USERS, this.updateUsers.bind(this));
         this.box.style.display = 'block';
 
-        this.updateUsers();
+        this.getInitialUsers();
+    }
+
+    ActiveUsers.prototype.getInitialUsers = function() {
+        socket.emit('get_users');
     }
 
     ActiveUsers.prototype.updateUsers = function(data) {

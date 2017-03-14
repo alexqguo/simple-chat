@@ -18,7 +18,7 @@ io.on('connection', (socket) => {
 
         cb(true);
         printUsers(io.engine.clientsCount);
-        io.sockets.emit('users_update', users);
+        io.sockets.emit('all_users', users);
     });
 
     socket.on('ready', (data) => {
@@ -30,18 +30,22 @@ io.on('connection', (socket) => {
         checkAllUsersForReady();
     });
 
+    socket.on('get_users', () => {
+        io.sockets.emit('users_update', users);
+    });
+
     socket.on('disconnect', () => {
         console.log('disconnect');
         delete users[username];
 
         printUsers(io.engine.clientsCount);
-        io.sockets.emit('users_update', users);
+        io.sockets.emit('all_users', users);
     });
 });
 
 function checkAllUsersForReady() {
     for (var key in users) {
-        if (!users[key].message) {
+        if (typeof(users[key].message) === undefined) {
             return;
         }
     }
