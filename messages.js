@@ -8,17 +8,22 @@ io.on('connection', (socket) => {
     var username;
 
     socket.on('login', (data, cb) => {
-        username = xss(data.name);
-        // TODO: check for existing user
+        var sanitizedName = xss(data.name);
 
-        users[username] = {
-            username: username,
-            message: null
-        };
+        if (isValidUsername(sanitizedName)) {
+            username = sanitizedName;
 
-        cb(true);
-        printUsers(io.engine.clientsCount);
-        io.sockets.emit('all_users', users);
+            users[username] = {
+                username: username,
+                message: null
+            };
+
+            cb(true);
+            printUsers(io.engine.clientsCount);
+            io.sockets.emit('all_users', users);
+        } else {
+            cb(false);
+        }
     });
 
     socket.on('ready', (data) => {
@@ -39,13 +44,16 @@ io.on('connection', (socket) => {
         delete users[username];
 
         printUsers(io.engine.clientsCount);
-        io.sockets.emit('all_users', users);
+        io.sockets.emit('users_update', users);
+        checkAllUsersForReady();
     });
 });
 
 function checkAllUsersForReady() {
     for (var key in users) {
-        if (typeof(users[key].message) === undefined) {
+        var message = users[key].message;
+
+        if (typeof(message) === 'undefined' || message === null) {
             return;
         }
     }
@@ -66,4 +74,8 @@ function releaseUsers() {
 function printUsers(clientCount) {
     console.log(users);
     console.log(clientCount + '\n');
+}
+
+function isValidUsername(username) {
+    return !!username && typeof(users[username]) === 'undefined';
 }
