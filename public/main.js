@@ -89,13 +89,23 @@
     Chat.prototype.updateChatWithMessages = function(users) {
         var fragment = document.createDocumentFragment();
 
-        for (var key in users) {
+        function createMessage(text, isSpacer) {
             var message = document.createElement('li');
-            message.innerHTML = users[key].username + ': ' + users[key].message
+            message.innerHTML = text;
+
+            if (isSpacer) {
+                message.classList.add('final');
+            }
+
             fragment.appendChild(message);
         }
 
+        for (var key in users) {
+            createMessage(users[key].username + ': ' + users[key].message);
+        }
+
         this.overlay.style.display = 'none';
+        this.messages.innerHTML = '';
         this.messages.appendChild(fragment);
         this.clearInput();
     }
